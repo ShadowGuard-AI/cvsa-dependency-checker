@@ -76,24 +76,31 @@ def static_analysis(project_path):
     Returns:
         tuple: Pylint output string and pycodestyle output string.
     """
+    # Each tool gets its own try block. Sharing one meant a pylint failure
+    # also wiped out the pycodestyle result, and the report showed the same
+    # pylint error in both sections.
     pylint_output = ""
     pycodestyle_output = ""
     try:
-        # Pylint analysis
         logging.info("Running Pylint analysis...")
-        pylint_args = [project_path]
-        pylint_results = lint.Run(pylint_args, do_exit=False)
-        pylint_output = pylint_results.linter.output.getvalue()
+        # Current pylint takes exit=False, and output only reaches a string
+        # buffer when a reporter writing to one is passed in.
+        from io import StringIO
+        from pylint.reporters.text import TextReporter
+        buffer = StringIO()
+        lint.Run([project_path], reporter=TextReporter(buffer), exit=False)
+        pylint_output = buffer.getvalue()
+    except Exception as e:
+        logging.error(f"Error during pylint: {e}")
+        pylint_output = f"Error during pylint: {e}"
 
-        # Pycodestyle analysis
+    try:
         logging.info("Running Pycodestyle analysis...")
         style_guide = pycodestyle.StyleGuide()
-        report = style_guide.check_files([project_path])  # Recursively checks files in the project
+        report = style_guide.check_files([project_path])
         pycodestyle_output = f"Pycodestyle violations: {report.total_errors}"
-
     except Exception as e:
-        logging.error(f"Error during static analysis: {e}")
-        pylint_output = f"Error during pylint: {e}"
+        logging.error(f"Error during pycodestyle: {e}")
         pycodestyle_output = f"Error during pycodestyle: {e}"
 
     return pylint_output, pycodestyle_output
