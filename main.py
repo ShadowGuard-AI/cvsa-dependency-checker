@@ -28,7 +28,11 @@ def check_dependencies(project_path):
     Args:
         project_path (str): The path to the project directory.
     Returns:
-        tuple: A tuple containing the dependencies list and a report string.
+        tuple: Dependencies list, report string, and a flag telling
+        whether the safety check actually ran. The flag matters because
+        safety exits non-zero when it finds vulnerabilities, so its
+        exit code alone cannot separate "found problems" from "never
+        ran"; a run that produced a report counts as ran either way.
     """
     try:
         # Activate the virtual environment if it exists
@@ -39,7 +43,10 @@ def check_dependencies(project_path):
             if not os.path.exists(activate_script):
                 logging.warning("Virtual environment not found. Checking global dependencies.")
                 dependencies = subprocess.check_output(["pip", "freeze"], text=True)
-                report = subprocess.check_output(["safety", "check", "--full-report"], text=True)
+                proc = subprocess.run(["safety", "check", "--full-report"], capture_output=True, text=True)
+                if not proc.stdout:
+                    raise subprocess.CalledProcessError(proc.returncode, proc.args, output=proc.stdout, stderr=proc.stderr)
+                report = proc.stdout
                 
         else: #if venv exists
             logging.info("Virtual environment found. Activating and checking dependencies.")
@@ -49,24 +56,24 @@ def check_dependencies(project_path):
             process = subprocess.Popen(activate_cmd, shell=True, executable='/bin/bash', cwd=project_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)  
             stdout, stderr = process.communicate()
 
-            if process.returncode != 0:
+            if process.returncode != 0 and not stdout:
                 logging.error(f"Safety check failed: {stderr}")
                 raise subprocess.CalledProcessError(process.returncode, activate_cmd, output=stdout, stderr=stderr)
 
             report = stdout
             dependencies = subprocess.check_output(["pip", "freeze"], shell=True, executable='/bin/bash', text=True, cwd=project_path)
        
-        return dependencies, report
+        return dependencies, report, True
 
     except subprocess.CalledProcessError as e:
         logging.error(f"Error running dependency check: {e.stderr}")
-        return "", f"Error running dependency check: {e.stderr}"
+        return "", f"Error running dependency check: {e.stderr}", False
     except FileNotFoundError as e:
         logging.error(f"Error: pip or safety not found: {e}")
-        return "", f"Error: pip or safety not found: {e}"
+        return "", f"Error: pip or safety not found: {e}", False
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
-        return "", f"An unexpected error occurred: {e}"
+        return "", f"An unexpected error occurred: {e}", False
 
 def static_analysis(project_path):
     """
@@ -121,13 +128,15 @@ def main():
     logging.info(f"Starting analysis for project: {args.project_path}")
 
     # Dependency Check
+    dependency_check_ran = True
     try:
-        dependencies, safety_report = check_dependencies(args.project_path)
+        dependencies, safety_report, dependency_check_ran = check_dependencies(args.project_path)
         logging.info("Dependency check completed.")
     except Exception as e:
          logging.error(f"Dependency check failed: {e}")
          safety_report = str(e)
          dependencies = ""
+         dependency_check_ran = False
 
     # Static Analysis
     try:
@@ -171,6 +180,12 @@ def main():
         print(report)
     
     logging.info("Analysis complete.")
+
+    # The report is still printed when the safety check never ran (its
+    # section carries the error), but the run itself failed: a missing
+    # safety executable used to end in "Analysis complete" and exit 0.
+    if not dependency_check_ran:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
