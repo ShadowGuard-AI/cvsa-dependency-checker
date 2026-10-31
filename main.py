@@ -34,35 +34,51 @@ def check_dependencies(project_path):
         exit code alone cannot separate "found problems" from "never
         ran"; a run that produced a report counts as ran either way.
     """
+    project_path = os.path.abspath(project_path)
     try:
-        # Activate the virtual environment if it exists
+        # Use the virtual environment executables directly by path when a
+        # .venv is present. No shell is involved, so the project path is
+        # never parsed as shell syntax, and the freeze and the safety check
+        # describe the same environment.
         venv_path = os.path.join(project_path, ".venv")
-        activate_script = os.path.join(venv_path, "bin", "activate")  # Linux/macOS
-        if not os.path.exists(activate_script):
-            activate_script = os.path.join(venv_path, "Scripts", "activate") # Windows
-            if not os.path.exists(activate_script):
-                logging.warning("Virtual environment not found. Checking global dependencies.")
-                dependencies = subprocess.check_output(["pip", "freeze"], text=True)
-                proc = subprocess.run(["safety", "check", "--full-report"], capture_output=True, text=True)
-                if not proc.stdout:
-                    raise subprocess.CalledProcessError(proc.returncode, proc.args, output=proc.stdout, stderr=proc.stderr)
-                report = proc.stdout
-                
-        else: #if venv exists
-            logging.info("Virtual environment found. Activating and checking dependencies.")
-            # Use subprocess to activate the virtual environment and run safety check
-            activate_cmd = ". " + activate_script + " && safety check --full-report"
-            
-            process = subprocess.Popen(activate_cmd, shell=True, executable='/bin/bash', cwd=project_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)  
-            stdout, stderr = process.communicate()
-
-            if process.returncode != 0 and not stdout:
-                logging.error(f"Safety check failed: {stderr}")
-                raise subprocess.CalledProcessError(process.returncode, activate_cmd, output=stdout, stderr=stderr)
-
-            report = stdout
-            dependencies = subprocess.check_output(["pip", "freeze"], shell=True, executable='/bin/bash', text=True, cwd=project_path)
-       
+        bin_dir = os.path.join(venv_path, "bin")
+        if not os.path.isdir(bin_dir):
+            bin_dir = os.path.join(venv_path, "Scripts")
+        safety_exe = os.path.join(bin_dir, "safety")
+        pip_exe = os.path.join(bin_dir, "pip")
+        python_exe = os.path.join(bin_dir, "python")
+        has_venv = os.path.isdir(venv_path) and os.path.isdir(bin_dir)
+        if not has_venv:
+            logging.warning("Virtual environment not found. Checking global dependencies.")
+            dependencies = subprocess.check_output(["pip", "freeze"], text=True)
+            proc = subprocess.run(["safety", "check", "--full-report"], capture_output=True, text=True)
+            if not proc.stdout:
+                raise subprocess.CalledProcessError(proc.returncode, proc.args, output=proc.stdout, stderr=proc.stderr)
+            report = proc.stdout
+        else:
+            logging.info("Virtual environment found. Checking dependencies with its own executables.")
+            if os.path.exists(safety_exe):
+                proc = subprocess.run([safety_exe, "check", "--full-report"], capture_output=True, text=True, cwd=project_path)
+            elif os.path.exists(python_exe):
+                proc = subprocess.run([python_exe, "-m", "safety", "check", "--full-report"], capture_output=True, text=True, cwd=project_path)
+            else:
+                raise FileNotFoundError(f"No safety executable found in {bin_dir}")
+            if proc.returncode != 0 and not proc.stdout:
+                logging.error(f"Safety check failed: {proc.stderr}")
+                raise subprocess.CalledProcessError(proc.returncode, proc.args, output=proc.stdout, stderr=proc.stderr)
+            report = proc.stdout
+            # The freeze comes from the same venv. A freeze failure must not
+            # throw away a safety report that already finished.
+            try:
+                if os.path.exists(pip_exe):
+                    dependencies = subprocess.check_output([pip_exe, "freeze"], text=True, cwd=project_path)
+                elif os.path.exists(python_exe):
+                    dependencies = subprocess.check_output([python_exe, "-m", "pip", "freeze"], text=True, cwd=project_path)
+                else:
+                    dependencies = ""
+            except Exception as freeze_error:
+                logging.error(f"Error running pip freeze in virtual environment: {freeze_error}")
+                dependencies = f"Error running pip freeze: {freeze_error}"
         return dependencies, report, True
 
     except subprocess.CalledProcessError as e:
@@ -112,6 +128,21 @@ def static_analysis(project_path):
 
     return pylint_output, pycodestyle_output
 
+def filter_ignored(text, ignored):
+    """Remove lines that mention any ignored id, so an ignored finding is
+    not presented as a found vulnerability."""
+    if not ignored or not text:
+        return text
+    lowered = [item.strip().lower() for item in ignored if item.strip()]
+    if not lowered:
+        return text
+    kept = []
+    for line in text.splitlines():
+        if any(item in line.lower() for item in lowered):
+            continue
+        kept.append(line)
+    return "\n".join(kept) + ("\n" if kept else "")
+
 def main():
     """
     Main function to orchestrate the dependency check and static analysis.
@@ -119,11 +150,14 @@ def main():
     parser = setup_argparse()
     args = parser.parse_args()
 
-    # Validate project path
+    # Validate project path and resolve it to an absolute path before any
+    # command is built from it, so relative and absolute spellings behave
+    # the same.
     if not os.path.isdir(args.project_path):
         logging.error("Invalid project path. Please provide a valid directory.")
         print("Error: Invalid project path. Please provide a valid directory.")
         sys.exit(1)
+    args.project_path = os.path.abspath(args.project_path)
 
     logging.info(f"Starting analysis for project: {args.project_path}")
 
@@ -148,9 +182,17 @@ def main():
         pycodestyle_report = str(e)
 
 
+    ignored_vulns = [item.strip() for item in args.ignore.split(',')] if args.ignore else []
+    if ignored_vulns:
+        safety_report = filter_ignored(safety_report, ignored_vulns)
+        pylint_report = filter_ignored(pylint_report, ignored_vulns)
+
     # Prepare and output report
     report = f"## cvsa-Dependency-Checker Report\n\n"
     report += f"**Project Path:** {args.project_path}\n\n"
+
+    report += "### Dependencies:\n"
+    report += (dependencies if isinstance(dependencies, str) else str(dependencies)) + "\n\n"
 
     report += "### Dependency Vulnerability Check (Safety):\n"
     report += safety_report + "\n\n"
@@ -161,9 +203,8 @@ def main():
     report += "### Pycodestyle Report:\n"
     report += pycodestyle_report + "\n\n"
 
-    # Handle ignored vulnerabilities
-    if args.ignore:
-        ignored_vulns = args.ignore.split(',')
+    # The footer names the ids whose lines were removed above.
+    if ignored_vulns:
         report += f"**Ignored Vulnerabilities:** {', '.join(ignored_vulns)}\n"
 
 

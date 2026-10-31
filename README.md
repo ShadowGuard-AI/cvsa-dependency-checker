@@ -12,7 +12,11 @@ Lists all project dependencies and checks them against the known vulnerabilities
 ## Parameters
 - `-h`: Show help message and exit
 - `--report_file`: Path to save the report. If not provided, it prints to stdout.
-- `--ignore`: No description provided
+- `--ignore`: Comma-separated list of ids to ignore, for example CVE-2023-123,PYLINT:W0613. Report lines in the Safety and Pylint sections that mention an ignored id are removed from the report.
+
+## Notes
+
+The report includes a Dependencies section holding the pip freeze output. When the project has a .venv, the freeze and the safety check both run with that venv's own executables, called directly by path with no shell, and they describe the venv environment. The project path is resolved to an absolute path before any command runs, so relative and absolute paths behave the same. An invalid project path exits 1, and a run where the dependency check never ran also exits 1.
 
 ## License
 Copyright (c) ShadowStrikeHQ
