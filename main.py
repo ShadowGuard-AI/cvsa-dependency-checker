@@ -50,6 +50,11 @@ def check_dependencies(project_path):
         has_venv = os.path.isdir(venv_path) and os.path.isdir(bin_dir)
         if not has_venv:
             logging.warning("Virtual environment not found. Checking global dependencies.")
+            # Global here means this machine's own environment, in
+            # whatever directory this tool was started from. The report
+            # is then about the analyst's installed packages, not the
+            # target project's, and the project path plays no part in
+            # either command on this branch.
             dependencies = subprocess.check_output(["pip", "freeze"], text=True)
             proc = subprocess.run(["safety", "check", "--full-report"], capture_output=True, text=True)
             if not proc.stdout:
@@ -121,6 +126,10 @@ def static_analysis(project_path):
         logging.info("Running Pycodestyle analysis...")
         style_guide = pycodestyle.StyleGuide()
         report = style_guide.check_files([project_path])
+        # Only the total survives into the report. Which files and lines
+        # produced the count is printed by the library to stdout during
+        # the run and is not captured here, so a saved report file holds
+        # a number with nothing behind it.
         pycodestyle_output = f"Pycodestyle violations: {report.total_errors}"
     except Exception as e:
         logging.error(f"Error during pycodestyle: {e}")
@@ -131,6 +140,11 @@ def static_analysis(project_path):
 def filter_ignored(text, ignored):
     """Remove lines that mention any ignored id, so an ignored finding is
     not presented as a found vulnerability."""
+    # Matching is a plain substring test on each line, case folded. An
+    # id that appears inside a longer word, a summary line, or a
+    # dependency name removes that line too, and main applies this to
+    # the safety and pylint sections only: the dependency list and the
+    # pycodestyle count are never filtered.
     if not ignored or not text:
         return text
     lowered = [item.strip().lower() for item in ignored if item.strip()]
