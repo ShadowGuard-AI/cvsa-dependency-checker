@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" role="img" aria-label="The tea race in three bands: both clippers crossing under sail in the far band with wakes trailing and fading, the leading deck in the middle band with chests lashed, a coiled rope swaying with the roll of the hull and the brass bell swinging in small arcs as the hull rolls, and a rolled chart on a deck table in the near band with its loose end curling and uncurling a fraction">
+<rect width="900" height="300" fill="#223a54"/>
+<rect width="900" height="70" fill="#c6c9c7"/>
+<polygon points="380,300 470,90 540,90 520,300" fill="#c9a227" opacity="0.35"><animate attributeName="opacity" values="0.3;0.45;0.3" dur="14s" repeatCount="indefinite"/></polygon>
+<g><animateTransform attributeName="transform" type="translate" values="-40 0; 160 0" dur="30s" repeatCount="indefinite"/>
+<g fill="#b9bcbe"><polygon points="120,86 128,40 168,86"/><polygon points="112,86 106,52 74,86"/><polygon points="196,80 204,30 248,80"/><polygon points="188,80 182,44 146,80"/></g>
+<polygon points="60,96 240,96 214,114 92,114" fill="#14243e"/>
+<line x1="52" y1="102" x2="10" y2="108" stroke="#e8e9e6" stroke-width="3" opacity="0.8"><animate attributeName="opacity" values="0.8;0.2" dur="6s" repeatCount="indefinite"/></line>
+<line x1="66" y1="96" x2="130" y2="96" stroke="#57e389" stroke-width="2"/></g>
+<g><animateTransform attributeName="transform" type="translate" values="60 0; 260 0" dur="30s" repeatCount="indefinite"/>
+<g fill="#b9bcbe"><polygon points="420,110 430,48 482,110"/><polygon points="410,110 402,64 362,110"/><polygon points="516,102 526,36 584,102"/><polygon points="506,102 498,52 452,102"/></g>
+<polygon points="350,122 610,122 572,146 396,146" fill="#14243e"/>
+<line x1="340" y1="128" x2="290" y2="136" stroke="#e8e9e6" stroke-width="3" opacity="0.8"><animate attributeName="opacity" values="0.8;0.2" dur="7s" repeatCount="indefinite"/></line>
+<line x1="356" y1="122" x2="450" y2="122" stroke="#57e389" stroke-width="2"/>
+<g fill="#8c9092" stroke="#14243e" stroke-width="2"><rect x="386" y="92" width="34" height="26"/><rect x="424" y="92" width="34" height="26"/><rect x="462" y="92" width="34" height="26"/></g>
+<g stroke="#c9a227" stroke-width="2" fill="none"><ellipse cx="520" cy="112" rx="14" ry="5"><animate attributeName="rx" values="14;17;14" dur="5s" repeatCount="indefinite"/></ellipse></g>
+<g><animateTransform attributeName="transform" type="rotate" values="0 556 84; 7 556 84; 0 556 84; -7 556 84; 0 556 84" dur="5s" repeatCount="indefinite"/>
+<polygon points="548,84 564,84 568,102 544,102" fill="#b08c3c"/></g>
+</g>
+<g>
+<rect x="96" y="238" width="220" height="14" fill="#14243e"/>
+<g stroke="#e8e9e6" stroke-width="9" stroke-linecap="round"><line x1="120" y1="232" x2="250" y2="232"/></g>
+<path d="M250 232 q26 -4 34 6" stroke="#e8e9e6" stroke-width="9" fill="none" stroke-linecap="round"><animate attributeName="d" values="M250 232 q26 -4 34 6; M250 232 q26 -12 36 2; M250 232 q26 -4 34 6" dur="8s" repeatCount="indefinite"/></path>
+<g stroke="#c9a227" stroke-width="6" stroke-linecap="round"><line x1="300" y1="234" x2="380" y2="234"/></g>
+</g>
+</svg>
