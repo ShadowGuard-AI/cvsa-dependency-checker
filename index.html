@@ -3,162 +3,99 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cvsa Dependency Checker: what it is, how it runs, where it stops</title>
-<meta name="description" content="Cvsa Dependency Checker is one of my projects. The README in the repo is short, so this page sticks to what the files themselves show.">
+<title>cvsa-dependency-checker: Clipper Ship Tea Race</title>
 <style>
-:root {
-  --bg: #1a0c0c; --panel: #2a1412; --ink: #f0e6d6;
-  --mut: #381b18;
-  --acc: #c9a24b; --acc2: #94b2c4;
-  --line: #2a1412;
-}
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink);
-  font-family: Charter, Georgia, serif; line-height: 1.55; }
-code, pre, .mono { font-family: 'DejaVu Sans Mono', monospace; }
-a { color: var(--acc2); }
-.hero { padding: 3rem 6vw 1rem; }
-.hero img.banner { width: 100%; height: auto; border: 1px solid var(--line);
-  border-radius: 10px; }
-.logo { width: 92px; height: 92px; border-radius: 18px;
-  border: 1px solid var(--line); }
-h1 { font-size: 2.4rem; margin: 0.4em 0 0.1em; }
-h2 { border-bottom: 2px solid var(--acc); padding-bottom: 0.2em;
-  margin-top: 2em; }
-.lede { font-size: 1.15rem; max-width: 62ch; }
-main { padding: 0 6vw 3rem; max-width: 1180px; margin: 0 auto; }
-.grid { display: grid; gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
-.card { background: var(--panel); border: 1px solid var(--line);
-  border-radius: 12px; padding: 1rem 1.2rem; }
-.card.pop { animation: rise 0.7s ease both; }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; } }
-pre.code { background: #101014; color: #e8e6df; padding: 1rem 1.2rem;
-  border-radius: 12px; overflow-x: auto; font-size: 0.86rem;
-  border-left: 5px solid var(--acc); }
-table { border-collapse: collapse; width: 100%; }
-td, th { border-bottom: 1px solid var(--line); padding: 0.45rem 0.6rem;
-  text-align: left; }
-.shots { display: grid; gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.shots img { width: 100%; height: auto; border: 1px solid var(--line);
-  border-radius: 10px; background: #f4f1e8; }
-footer { padding: 2rem 6vw; border-top: 1px solid var(--line);
-  color: var(--mut); }
-.rail { display: flex; gap: 1.2rem; align-items: flex-start; }
-.rail nav { position: sticky; top: 1rem; min-width: 180px; }
-@media (max-width: 760px) { .rail { flex-direction: column; }
-  .rail nav { position: static; } }
-@media (prefers-reduced-motion: reduce) {
-  .card.pop { animation: none; } * { scroll-behavior: auto; } }
+@font-face { font-family: "Borel"; src: url("fonts/Borel.ttf"); }
+@font-face { font-family: "Bitter"; src: url("fonts/Bitter.ttf"); }
+body { margin: 0; background: #0d1b3e; color: #eef0e6; font-family: "Bitter", serif; }
+header { text-align: center; padding: 2rem 1rem 0.5rem; }
+header img.intro { max-width: 100%; border: 3px solid #c9a227; }
+h1, h2 { font-family: "Borel", cursive; color: #c9a227; }
+h1 { font-size: 2.4rem; margin: 1rem 0 0.2rem; }
+.tagline { color: #aebadd; margin: 0 0 1rem; }
+main { max-width: 880px; margin: 0 auto; padding: 0 1rem 3rem; }
+section { background: #e8e6da; color: #0d1b3e; border: 1px solid #c9a227; border-radius: 6px; padding: 1.2rem 1.4rem; margin: 1.4rem 0; }
+section h2 { color: #0d1b3e; margin-top: 0; border-bottom: 2px solid #c9a227; padding-bottom: 0.3rem; }
+code, pre { background: #d8d4c2; color: #0d1b3e; }
+pre { padding: 1rem; overflow-x: auto; white-space: pre-wrap; }
+.btn { display: inline-block; background: #c9a227; color: #0d1b3e; font-family: "Borel", cursive; padding: 0.45rem 1.3rem; border-radius: 4px; margin: 0.3rem 0.4rem 0.3rem 0; }
+.divider { border: none; border-top: 2px solid #c9a227; margin: 0.4rem auto; width: 60%; }
+footer { text-align: center; color: #aebadd; padding: 1rem; }
+img.mark { max-height: 120px; }
 </style>
 </head>
-<body class="layout-grid">
-<!-- This page exists for cvsa-dependency-checker alone: the layout (console-grid),
-     the colors, and the type were picked for this project, not
-     shared with the other project pages. The code block below is
-     copied from the file it names, line for line. If it looks
-     plain, that is because the project is plain, and I would
-     rather the page match the project than dress it up. The one
-     thing I will not do here is oversell: what this project does
-     not do is stated on the page, not hidden from it. -->
-<header class="hero">
-  <img class="logo" src="assets/logo.png" alt="Cvsa Dependency Checker logo">
-  <img class="banner" src="assets/banner.png" alt="">
-  <h1>Cvsa Dependency Checker</h1>
-  <p class="mono"><a href="https://github.com/ShadowGuard-AI/cvsa-dependency-checker">github.com/ShadowGuard-AI/cvsa-dependency-checker</a></p>
+<body>
+<header>
+<img class="intro" src="intro-banner.png" alt="Clipper ships racing under full sail, no lettering">
+<h1>cvsa-dependency-checker: Clipper Ship Tea Race</h1>
+<p class="tagline">Two halves in one hull: what the cargo is, and what condition it arrived in.</p>
+<img class="mark" src="logo.png" alt="Clipper ship logo">
+<div><img src="banner.png" alt="cvsa-dependency-checker wordmark banner" style="max-width:100%"></div>
+<p>
+<span class="btn">Check the Project</span>
+<span class="btn">Save the Report</span>
+<span class="btn">Apply the Ignore List</span>
+<span class="btn">Show the Log Notes</span>
+</p>
 </header>
-
 <main>
-  <section class="rail">
-    <nav aria-label="on this page">
-      <p class="mono"><a href="#run">Run it</a><br>
-      <a href="#files">The files</a><br>
-      <a href="#sheets">The sheets</a><br>
-      <a href="https://github.com/ShadowGuard-AI/cvsa-dependency-checker">The repo</a></p>
-    </nav>
-    <div>
-      <p class="lede">Cvsa Dependency Checker is one of my projects. The README in the repo is short, so this page sticks to what the files themselves show.</p>
-      <div class="grid">
-        <div class="card pop"><h3>What it is</h3>
-          <p>Cvsa Dependency Checker: 3 files, 190 counted
-          lines across Python 169, Markdown 16, Text 5. One job, done in the
-          open, in files you can read.</p></div>
-        <div class="card pop"><h3>The biggest piece</h3>
-          <p><code>main.py</code> carries the most
-          lines. If the project grows, that file is where the growth
-          lands first, for better or worse.</p></div>
-        <div class="card pop"><h3>The honest gap</h3>
-          <p>No test files yet. That is the honest gap, and the roadmap in the visuals folder says what the first one should cover.</p></div>
-      </div>
-      <section id="run">
-        <h2>Run it</h2>
-        <p>The repo README has the exact commands for this one. The
-        shape is the shape for most of my projects: clone it, read the
-        top file first so you know what will happen, then run it on
-        something you do not mind breaking.</p>
-        <p class="mono">$ git clone https://github.com/ShadowGuard-AI/cvsa-dependency-checker.git<br>$ cd cvsa-dependency-checker</p>
-      </section>
-      
-  <section aria-label="real code">
-    <h2>The code, as it sits in the repo</h2>
-    <p>From <code>main.py</code>, line 11 on. I did
-    not tidy it for the page. What you see is what the file has.</p>
-    <pre class="code"><code>logging.basicConfig(level=logging.INFO, format=&#x27;%(asctime)s - %(levelname)s - %(message)s&#x27;)
+<section>
+<h2>Two Halves, One Report</h2>
+<p>One run produces a report in two halves. The Safety half runs the safety checker over the project's dependencies in JSON mode, with the global flag when no virtualenv is present, and carries the dependency vulnerability findings. The Pylint half runs pylint over the project and contributes its section. The report also includes a Dependencies section holding the pip freeze output. When the project has a .venv, the freeze and the safety check both run with that venv's own executables, called directly by path with no shell, and they describe the venv environment.</p>
+</section>
+<hr class="divider">
+<section>
+<h2>Global Means This Machine</h2>
+<p>When no virtualenv is present, the safety check describes the environment of this machine, the global environment, and the report says so by its structure: the freeze and the findings belong to the interpreter that ran, not to an isolated project env that does not exist. The project path is resolved to an absolute path before any command runs, so relative and absolute paths behave the same.</p>
+</section>
+<hr class="divider">
+<section>
+<h2>Running It, and the Ignore List</h2>
+<p>Acquisition, exactly as published, with its fault flagged in place: the clone line names ShadowStrikeHQ, <code>git clone https://github.com/ShadowStrikeHQ/cvsa-dependency-checker</code>. That line stands as printed and is flagged, not corrected; the organisation that publishes this repo is ShadowGuard-AI.</p>
+<p>The README's usage line names an executable form, <code>./cvsa-dependency-checker [params]</code>; the code's own form is the one to use, <code>python3 main.py</code> with the project path and the flags below, run from the cloned directory. There is no executable or package by the repo name.</p>
+<ul>
+<li><code>--report_file</code>: path to save the report; prints to stdout when not provided.</li>
+<li><code>--ignore</code>: comma-separated list of ids to ignore, for example CVE-2023-123,PYLINT:W0613. Report lines in the Safety and Pylint sections that mention an ignored id are removed from the report.</li>
+<li><code>-h</code>: show help and exit.</li>
+</ul>
+</section>
+<hr class="divider">
+<section>
+<h2>Ran, or Never Ran</h2>
+<p>An invalid project path exits 1, and a run where the dependency check never ran also exits 1: a report is never dressed up as a result when the check behind it did not happen. One further code path is recorded as inconclusive, in the log's own terms: when zero dependencies are parsed, the program exits 3, a state the README glosses as the dependencies list being empty so nothing could be verified; whether a given project with an empty parse was verified empty or could not be verified cannot be told from the outside, and this page carries exit 3 as inconclusive rather than as an error.</p>
+</section>
+<hr class="divider">
+<section>
+<h2>Licensing</h2>
+<p>The README licence line reads <code>Copyright (c) ShadowStrikeHQ</code>, reproduced exactly as published, including its mistake, and flagged in place beside the install line's matching fault. Separately, the repository LICENSE file contains the MIT License, whose holder credit combines a pen name with a lone initial standing for the other name, recorded here without spelling that initial out.</p>
+</section>
+<section>
+<h2>The Record as Published</h2>
+<p>The live README, preserved verbatim:</p>
+<pre>![Banner](banner.png)
 
-def setup_argparse():
-    &quot;&quot;&quot;
-    Sets up the argument parser for the command-line interface.
-    Returns:
-        argparse.ArgumentParser: The configured argument parser.
-    &quot;&quot;&quot;
-    parser = argparse.ArgumentParser(description=&quot;cvsa-Dependency-Checker: Lightweight static analysis tool.&quot;)
-    parser.add_argument(&quot;project_path&quot;, help=&quot;Path to the project directory.&quot;)
-    parser.add_argument(&quot;--report_file&quot;, help=&quot;Path to save the report. If not provided, it prints to stdout.&quot;, default=None)
-    parser.add_argument(&quot;--ignore&quot;, help=&quot;Comma-separated list of vulnerabilities to ignore (e.g., CVE-2023-123,PYLINT:W0613)&quot;, default=None)
-    return parser
+# cvsa-Dependency-Checker
+Lists all project dependencies and checks them against the known vulnerabilities databases (e.g., using libraries like `safety`).  Outputs a summary of vulnerabilities, if any, and suggests possible upgrade paths. - Focused on Performs static analysis of source code to identify common security vulnerabilities (e.g., injection flaws, weak cryptography usage) based on pre-defined rules and patterns. Intended for quick, preliminary security assessments during development.
 
-def check_dependencies(project_path):
-    &quot;&quot;&quot;
-    Lists project dependencies using pip freeze and checks them against known vulnerabilities databases using safety.
-    Args:
-        project_path (str): The path to the project directory.
-    Returns:
-        tuple: A tuple containing the dependencies list and a report string.
-    &quot;&quot;&quot;</code></pre>
-  </section>
-      <section id="files">
-        <h2>The files that matter</h2>
-        <table><tr><th>File</th><th>Lines</th></tr>
-        <tr><td><code>main.py</code></td><td>169</td></tr>
-        <tr><td><code>README.md</code></td><td>16</td></tr>
-        <tr><td><code>requirements.txt</code></td><td>5</td></tr>
-        </table>
-        <p>Names doing the work: <span class="mono">setup_argparse, check_dependencies, static_analysis, main</span>.</p>
-      </section>
-      <section id="sheets">
-        <h2>Drawn by hand</h2>
-        <p>I sketch my projects on notebook paper so I have to
-        understand them well enough to draw them. The full set,
-        with the counts and how they were counted, is the
-        <a href="https://github.com/ShadowGuard-AI/cvsa-dependency-checker/tree/main/cvsa-dependency-checker-Visuals">cvsa-dependency-checker-Visuals</a>
-        folder in the repo. Nothing is drawn over the binder holes.
-        That is a rule, not a style.</p>
-        <div class="shots">
-          <img src="assets/architecture.png" alt="Hand drawn architecture sheet for Cvsa Dependency Checker">
-          <img src="assets/flowchart.png" alt="Hand drawn flowchart sheet for Cvsa Dependency Checker">
-          <img src="assets/product-map.png" alt="Hand drawn product map sheet for Cvsa Dependency Checker">
-        </div>
-      </section>
-    </div>
-  </section>
+## Install
+`git clone https://github.com/ShadowStrikeHQ/cvsa-dependency-checker`
+
+## Usage
+`./cvsa-dependency-checker [params]`
+
+## Parameters
+- `-h`: Show help message and exit
+- `--report_file`: Path to save the report. If not provided, it prints to stdout.
+- `--ignore`: Comma-separated list of ids to ignore, for example CVE-2023-123,PYLINT:W0613. Report lines in the Safety and Pylint sections that mention an ignored id are removed from the report.
+
+## Notes
+
+The report includes a Dependencies section holding the pip freeze output. When the project has a .venv, the freeze and the safety check both run with that venv's own executables, called directly by path with no shell, and they describe the venv environment. The project path is resolved to an absolute path before any command runs, so relative and absolute paths behave the same. An invalid project path exits 1, and a run where the dependency check never ran also exits 1.
+
+## License
+Copyright (c) ShadowStrikeHQ</pre>
+</section>
 </main>
-<footer>
-  <p>Cvsa Dependency Checker is one of my projects. This page was written
-  from the repo itself on 2026-10-30: the counts are the
-  repo's counts, the code is the repo's code, and the gaps are the
-  repo's gaps.</p>
-</footer>
+<footer>cvsa-dependency-checker: Clipper Ship Tea Race. A themed re-skin; the tool and its facts are unchanged.</footer>
 </body>
 </html>
